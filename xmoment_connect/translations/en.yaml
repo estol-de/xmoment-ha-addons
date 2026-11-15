@@ -1,0 +1,10 @@
+configuration:
+  auto_connect:
+    name: Connect new devices automatically
+    description: XMoment devices without a broker are connected to Home Assistant as soon as they are found. Devices using another broker are never taken over automatically.
+  devices:
+    name: Fixed device addresses
+    description: Only needed if your router blocks automatic discovery (mDNS), e.g. 192.168.2.17.
+  log_level:
+    name: Log level
+    description: How verbose the add-on logs.

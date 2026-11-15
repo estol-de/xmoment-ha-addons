@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>estol® XMoment Connect</title>
+<style>
+:root{--gold:#c8a86e;--gold-light:#d4b571;--dark:#1a1a1a;--darker:#0f0f0f;--border:#2a2a2a;--text:#fff;--muted:#aaa;--success:#4caf50;--error:#f44336;--warn:#ff9800;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{min-height:100%;background:var(--darker);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;}
+.wrap{max-width:640px;margin:0 auto;padding:16px;}
+.hdr{text-align:center;padding:26px 0 18px;}
+.logo{font-size:22px;font-weight:300;color:var(--gold);letter-spacing:3px;}
+.logo sup{font-size:10px;}
+.tagline{font-size:13px;color:var(--muted);margin-top:4px;}
+.sec{font-size:12px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin:22px 4px 10px;}
+.card{background:var(--dark);border:1px solid rgba(200,168,110,.12);border-radius:16px;padding:18px 20px;margin-bottom:12px;box-shadow:0 6px 24px rgba(0,0,0,.35);}
+.card.linked{border-color:rgba(200,168,110,.4);}
+.head{display:flex;align-items:center;gap:14px;}
+.ico{width:40px;height:40px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:var(--darker);border:1px solid var(--border);}
+.ico svg{width:20px;height:20px;color:var(--gold);}
+.name{flex:1;min-width:0;}
+.name b{display:block;font-size:16px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.name small{font-size:12px;color:var(--muted);}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:5px 11px;border-radius:20px;background:var(--darker);border:1px solid var(--border);color:var(--muted);white-space:nowrap;}
+.badge i{width:8px;height:8px;border-radius:50%;background:var(--border);}
+.badge.ok i{background:var(--success);} .badge.wait i{background:var(--warn);} .badge.err i{background:var(--error);}
+.meta{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted);margin-top:12px;}
+.btns{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;}
+.btn{flex:1;min-width:120px;padding:11px;border-radius:10px;font-size:14px;cursor:pointer;font-family:inherit;border:1px solid var(--border);background:var(--darker);color:var(--text);text-align:center;text-decoration:none;}
+.btn:hover{border-color:var(--gold);}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-light));color:var(--darker);border:none;font-weight:600;}
+.btn-danger{color:var(--error);} .btn-danger:hover{border-color:var(--error);}
+.btn:disabled{opacity:.5;cursor:default;}
+.msg{padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.5;margin-top:12px;}
+.msg-ok{background:rgba(76,175,80,.1);color:var(--success);border:1px solid rgba(76,175,80,.2);}
+.msg-warn{background:rgba(255,152,0,.1);color:var(--warn);border:1px solid rgba(255,152,0,.2);}
+.msg-err{background:rgba(244,67,54,.1);color:var(--error);border:1px solid rgba(244,67,54,.2);}
+.empty{text-align:center;color:var(--muted);font-size:14px;padding:34px 10px;line-height:1.6;}
+.spin{width:34px;height:34px;margin:0 auto 14px;border:3px solid rgba(200,168,110,.2);border-top-color:var(--gold);border-radius:50%;animation:rot 1s linear infinite;}
+@keyframes rot{to{transform:rotate(360deg);}}
+.row{display:flex;gap:8px;}
+.row input{flex:1;background:var(--darker);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:15px;padding:11px 13px;font-family:inherit;outline:none;min-width:0;}
+.row input:focus{border-color:var(--gold);}
+.row .btn{flex:0 0 auto;min-width:0;}
+.hint{font-size:12px;color:var(--muted);line-height:1.5;margin-top:10px;}
+.foot{text-align:center;font-size:11px;color:#555;padding:30px 0 10px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <div class="logo">estol<sup>®</sup> XMoment</div>
+    <div class="tagline">Connect für Home Assistant</div>
+  </div>
+  <div id="top"></div>
+  <div class="sec">Geräte im Heimnetz</div>
+  <div id="list"><div class="empty"><div class="spin"></div>Suche XMoment-Geräte …</div></div>
+
+  <div class="sec">Gerät nicht dabei?</div>
+  <div class="card">
+    <div class="row">
+      <input id="addr" placeholder="Adresse, z. B. 192.168.2.17 oder xmoment.local" autocapitalize="off" spellcheck="false">
+      <button class="btn btn-gold" id="scan">Suchen</button>
+    </div>
+    <div id="scanMsg"></div>
+    <div class="hint">Normalerweise erscheinen XMoment-Geräte von selbst. Falls Ihr Router das verhindert, hier die Adresse eintragen
+      (steht auf der Website des Geräts bzw. in Ihrem Router).</div>
+  </div>
+  <div class="foot">estol XMoment Connect · lokal, ohne Cloud</div>
+</div>
+
+<script>
+const ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.2 1 2V17h6v-.3c0-.8.4-1.5 1-2A7 7 0 0 0 12 2z"/></svg>';
+const STATE = {
+  linked:  ['ok',   'Mit Home Assistant verbunden'],
+  linking: ['wait', 'Verbindet …'],
+  free:    ['',     'Nicht verbunden'],
+  foreign: ['wait', 'An anderem Broker'],
+  offline: ['err',  'Nicht erreichbar'],
+};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let armed = null;
+
+function card(d) {
+  const [cls, label] = STATE[d.state] || ['', d.state];
+  let btns = '';
+  if (d.state === 'free') btns = `<button class="btn btn-gold" data-link="${d.node}" ${d.busy ? 'disabled' : ''}>Mit Home Assistant verbinden</button>`;
+  if (d.state === 'foreign') btns = `<button class="btn btn-gold" data-link="${d.node}" ${d.busy ? 'disabled' : ''}>Zu Home Assistant umziehen</button>`;
+  if (d.state === 'linked' || d.state === 'linking')
+    btns = `<button class="btn btn-danger" data-unlink="${d.node}" ${d.busy ? 'disabled' : ''}>${armed === d.node ? 'Wirklich trennen?' : 'Trennen'}</button>`;
+  if (d.state !== 'offline') btns += `<a class="btn" href="${esc(d.url)}" target="_blank" rel="noopener">Gerät öffnen</a>`;
+  let msg = '';
+  if (d.message) msg = `<div class="msg ${d.message.startsWith('Verbunden') || d.message.startsWith('Getrennt') ? 'msg-ok' : 'msg-err'}">${esc(d.message)}</div>`;
+  else if (d.state === 'linking' && d.error) msg = `<div class="msg msg-warn">${esc(d.error)}</div>`;
+  else if (d.state === 'foreign') msg = `<div class="msg msg-warn">Das Gerät sendet an einen anderen Broker (${esc(d.broker)}). Beim Umziehen verschwinden die Leuchten dort.</div>`;
+  else if (d.state === 'linked' && !d.ble) msg = `<div class="msg msg-warn">Verbunden, aber das Gerät erreicht gerade das Lichtnetz nicht.</div>`;
+  return `<div class="card ${d.state}">
+    <div class="head"><div class="ico">${ICON}</div>
+      <div class="name"><b>${esc(d.network || 'XMoment')}</b><small>${esc(d.host)}${d.lights ? ' · ' + d.lights + ' Leuchten' : ''}</small></div>
+      <span class="badge ${cls}"><i></i>${label}</span></div>
+    ${msg}<div class="btns">${btns}</div></div>`;
+}
+
+function render(v) {
+  $('#top').innerHTML = !v.broker ? `<div class="msg msg-err">${esc(v.broker_error || 'Kein MQTT-Broker')}</div>` : '';
+  $('#list').innerHTML = v.devices.length ? v.devices.map(card).join('')
+    : '<div class="empty"><div class="spin"></div>Suche XMoment-Geräte …<br><small>Das Gerät muss eingeschaltet und im selben Netz wie Home Assistant sein.</small></div>';
+}
+
+async function call(method, url, body) {
+  const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok && !d.error) d.error = 'Fehler ' + r.status;
+  return d;
+}
+
+async function refresh() {
+  try { render(await (await fetch('api/devices')).json()); } catch (e) { /* naechster Versuch */ }
+}
+
+document.addEventListener('click', async e => {
+  const t = e.target.closest('[data-link],[data-unlink]');
+  if (!t) return;
+  if (t.dataset.unlink && armed !== t.dataset.unlink) {      // zweiter Klick bestaetigt
+    armed = t.dataset.unlink; refresh(); setTimeout(() => { armed = null; refresh(); }, 4000); return;
+  }
+  armed = null; t.disabled = true; t.textContent = '…';
+  const node = t.dataset.link || t.dataset.unlink;
+  render(await call('POST', `api/devices/${encodeURIComponent(node)}/${t.dataset.link ? 'link' : 'unlink'}`, {}));
+});
+
+$('#scan').onclick = async () => {
+  const host = $('#addr').value.trim();
+  if (!host) return;
+  $('#scan').disabled = true; $('#scanMsg').innerHTML = '';
+  const d = await call('POST', 'api/scan', { host });
+  $('#scan').disabled = false;
+  if (d.error) $('#scanMsg').innerHTML = `<div class="msg msg-err">${esc(d.error)}</div>`;
+  else { $('#addr').value = ''; render(d); }
+};
+
+refresh();
+setInterval(() => { if (!document.hidden) refresh(); }, 4000);
+</script>
+</body>
+</html>

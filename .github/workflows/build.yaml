@@ -1,0 +1,46 @@
+# Baut die Add-on-Images fuer aarch64 + amd64 und legt sie in der GitHub-Container-Registry ab
+# (ghcr.io/estol-de/{arch}-addon-xmoment-connect:<version>). Bei Pull-Requests nur Testbau ohne Upload.
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths: ["xmoment_connect/**"]
+  pull_request:
+    paths: ["xmoment_connect/**"]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: frenck/action-addon-linter@v2
+        with:
+          path: "./xmoment_connect"
+
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        arch: [aarch64, amd64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        if: github.event_name != 'pull_request'
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Image bauen
+        uses: home-assistant/builder@7412f0023ea9b6e58e8bb5059f1660f51376f49a # 2026.09.0
+        with:
+          args: |
+            --${{ matrix.arch }} \
+            --target /data/xmoment_connect \
+            ${{ github.event_name == 'pull_request' && '--test' || '' }} \
+            --docker-hub ghcr.io/${{ github.repository_owner }}
